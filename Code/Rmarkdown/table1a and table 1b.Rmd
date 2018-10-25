@@ -1,0 +1,756 @@
+---
+title: "Tables in the manuscript"
+output: pdf_document
+classoption: 
+  - b4paper
+header-includes:
+    - \usepackage{caption}
+fontsize: 8 pt 
+---
+
+
+\captionsetup[table]{labelformat=empty}
+\pagestyle{empty}
+
+```{R include = FALSE}
+library(knitr)
+library(kableExtra)
+# HALI Data Analysis
+
+# Baseline and outcome characteristics 
+# of motivating HALI data set for
+# n=2465 participants with complete baseline covariates
+
+#### Draw Table 1A
+
+##### Library
+library(readstata13) # library for read in the dataset
+library(jomo) # library for MMI
+library(lme4) # library for GLM
+library(geeM) # library for GEE
+
+
+##### Read in dataset
+setwd('/Users/yaolanqiu/Documents/HALI/DATA')
+dat = read.dta13('HALI_CLASS1_2539_MASTER_EDUC_FU1_FU2_LONG_accounts_withdrawals_BL_AS_COV_AND_OTHER_COV_17.11.2016.dta',
+                  nonint.factors = TRUE, generate.factors=TRUE)
+# the full data named dat
+
+### We only focused on 9 month data
+data0 <- dat[dat$visit=='9-month FU',]
+dim(data0) # 2539 220
+# the data with only 9 month named data0
+
+### Select the input variables
+dat0 <- data0[,c("school_id","LIT_grp",
+                 "BL_gll21_total", 'age_child','sex',
+                 'schlevel_comp',"BL_ses",
+                 "gll21_total")]
+rownames(dat0) <- NULL
+dim(dat0) # 2539 8
+
+### Remove the data with missing covariates 
+dat1 = dat0[(is.na(dat0$school_id) == 0 & 
+      is.na(dat0$LIT_grp) == 0 &
+      is.na(dat0$BL_gll21_total) == 0 &
+      is.na(dat0$age_child)== 0 & 
+      is.na(dat0$sex) == 0 & 
+      is.na(dat0$schlevel_comp) == 0 &
+      is.na(dat0$BL_ses) ==0) ,]
+dim(dat1) #  2465 8
+
+
+##### Draw the table 1:
+
+# Number of student in intervention arm and control arm:
+dim(dat1[dat1$LIT_grp=='yes',]) # 1230
+dim(dat1[dat1$LIT_grp=='no',])  # 1235
+
+col1 = col2 =col3 =c()
+### Baseline cluster characteristics:
+col1 = c(col1, 'Baseline cluster characteristics')
+col2 = c(col2, '')
+col3 = c(col3, '')
+## cluster number:
+length(table(dat1[dat1$LIT_grp=='yes',]$school_id)) # intervention 51
+length(table(dat1[dat1$LIT_grp=='no',]$school_id)) # control 50
+
+col1 = c(col1,'Number')
+col2 = c(col2, length(table(dat1[dat1$LIT_grp=='yes',]$school_id)) )
+col3 = c(col3, length(table(dat1[dat1$LIT_grp=='no',]$school_id)))
+
+## cluster size (mean (SD)):
+# intervention 
+# cell 24.1 (3.3)
+paste(round(mean(table(dat1[dat1$LIT_grp=='yes',]$school_id)),1),' (',
+      round(sd(table(dat1[dat1$LIT_grp=='yes',]$school_id)),1),")",sep='')
+# control 
+# cell 24.7 (1.9)
+paste(round(mean(table(dat1[dat1$LIT_grp=='no',]$school_id)),1),' (',
+      round(sd(table(dat1[dat1$LIT_grp=='no',]$school_id)),1),")",sep='')
+
+col1 = c(col1,'Cluster Size – mean (SD)')
+col2 = c(col2, paste(round(mean(table(dat1[dat1$LIT_grp=='yes',]$school_id)),1),' (',
+                     round(sd(table(dat1[dat1$LIT_grp=='yes',]$school_id)),1),")",sep=''))
+col3 = c(col3, paste(round(mean(table(dat1[dat1$LIT_grp=='no',]$school_id)),1),' (',
+                     round(sd(table(dat1[dat1$LIT_grp=='no',]$school_id)),1),")",sep=''))
+
+
+### Baseline child-level characteristics:
+col1 = c(col1, 'Baseline child-level characteristics - % (n)')
+col2 = c(col2, '')
+col3 = c(col3, '')
+# intervention
+# gender - female: 47.9% (589)
+# 589
+dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'yes',])[1] 
+# 47.9%
+100 * round(dim(dat1[dat1$sex == 'Female' & 
+                 dat1$LIT_grp == 'yes',])[1]/ dim(dat1[dat1$LIT_grp == 'yes',])[1],3)
+# cell 47.9% (589)
+paste(100 * round(dim(dat1[dat1$sex == 'Female' & 
+                             dat1$LIT_grp == 'yes',])[1]/ dim(dat1[dat1$LIT_grp == 'yes',])[1],3),
+      "% (",dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'yes',])[1],")",sep='')
+
+# control
+# gender - female:  49.5% (611)
+# 611
+dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'no',])[1] 
+# 49.5%
+100 * round(dim(dat1[dat1$sex == 'Female' & 
+                       dat1$LIT_grp == 'no',])[1]/ dim(dat1[dat1$LIT_grp == 'no',])[1],3)
+# cell 47.9% (589)
+paste(100 * round(dim(dat1[dat1$sex == 'Female' & 
+                             dat1$LIT_grp == 'no',])[1]/ dim(dat1[dat1$LIT_grp == 'no',])[1],3),
+      "% (",dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'no',])[1],")",sep='')
+
+col1 = c(col1, 'Female')
+col2 = c(col2, paste(100 * round(dim(dat1[dat1$sex == 'Female' & 
+                                            dat1$LIT_grp == 'yes',])[1]/ dim(dat1[dat1$LIT_grp == 'yes',])[1],3),
+                     "% (",dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'yes',])[1],")",sep=''))
+col3 = c(col3, paste(100 * round(dim(dat1[dat1$sex == 'Female' & 
+                                            dat1$LIT_grp == 'no',])[1]/ dim(dat1[dat1$LIT_grp == 'no',])[1],3),
+                     "% (",dim(dat1[dat1$sex == 'Female' & dat1$LIT_grp == 'no',])[1],")",sep=''))
+
+# intervention
+# age - mean(sd)
+round(mean(dat1[dat1$LIT_grp == 'yes',]$age_child),1) # 7.1
+round(sd(dat1[dat1$LIT_grp == 'yes',]$age_child),1) # 1.7
+# cell 7.7 (1.7)
+paste(round(mean(dat1[dat1$LIT_grp == 'yes',]$age_child),1),
+      ' (', round(sd(dat1[dat1$LIT_grp == 'yes',]$age_child),1),
+      ')', sep = '')
+
+# control
+# age - mean(sd)
+round(mean(dat1[dat1$LIT_grp == 'no',]$age_child),1) # 7.9
+round(sd(dat1[dat1$LIT_grp == 'no',]$age_child),1) # 1.7
+# cell 7.9 (1.7)
+paste(round(mean(dat1[dat1$LIT_grp == 'no',]$age_child),1),
+      ' (', round(sd(dat1[dat1$LIT_grp == 'no',]$age_child),1),
+      ')', sep = '')
+
+col1 = c(col1, 'Age – mean (sd)')
+col2 = c(col2, paste(round(mean(dat1[dat1$LIT_grp == 'yes',]$age_child),1),
+                     ' (', round(sd(dat1[dat1$LIT_grp == 'yes',]$age_child),1),
+                     ')', sep = ''))
+col3 = c(col3, paste(round(mean(dat1[dat1$LIT_grp == 'no',]$age_child),1),
+                     ' (', round(sd(dat1[dat1$LIT_grp == 'no',]$age_child),1),
+                     ')', sep = ''))
+
+# intervention
+# household education:
+
+col1 = c(col1, 'Household head education')
+col2 = c(col2, '')
+col3 = c(col3, '')
+
+table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp)
+100 * round(table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='yes',])[1],3)
+# "29.1% (358)" "55.6% (684)" "11.5% (141)" "3.8% (47)" 
+paste(100 * round(table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='yes',])[1],3),
+      "% (",
+      table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp), ")",sep='')
+
+# control
+# household education:
+table(dat1[dat1$LIT_grp=='no',]$schlevel_comp)
+100 * round(table(dat1[dat1$LIT_grp=='no',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='no',])[1],3)
+# "34.4% (425)" "52.7% (651)" "10.6% (131)" "2.3% (28)" 
+paste(100 * round(table(dat1[dat1$LIT_grp=='no',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='no',])[1],3),
+      "% (",
+      table(dat1[dat1$LIT_grp=='no',]$schlevel_comp), ")",sep='')
+
+col1 = c(col1,c('Did not complete primary education',
+                'Primary',
+                'Secondary',
+                'College/degree'))
+col2 = c(col2, paste(100 * round(table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='yes',])[1],3),
+                     "% (",
+                     table(dat1[dat1$LIT_grp=='yes',]$schlevel_comp), ")",sep=''))
+col3 = c(col3, paste(100 * round(table(dat1[dat1$LIT_grp=='no',]$schlevel_comp)/dim(dat1[dat1$LIT_grp=='no',])[1],3),
+                     "% (",
+                     table(dat1[dat1$LIT_grp=='no',]$schlevel_comp), ")",sep=''))
+
+# intervention
+# SES
+col1 = c(col1, 'Household socioeconomic status (SES)')
+col2 = c(col2, '')
+col3 = c(col3, '')
+
+table(dat1[dat1$LIT_grp=='yes',]$BL_ses)
+100 * round(table(dat1[dat1$LIT_grp=='yes',]$BL_ses)/dim(dat1[dat1$LIT_grp=='yes',])[1],3)
+# "19% (234)"   "19.9% (245)" "21.1% (259)" "19.9% (245)" "20.1% (247)"
+paste(100 * round(table(dat1[dat1$LIT_grp=='yes',]$BL_ses)/dim(dat1[dat1$LIT_grp=='yes',])[1],3),
+      "% (",
+      table(dat1[dat1$LIT_grp=='yes',]$BL_ses), ")",sep='')
+
+# control 
+# ses
+table(dat1[dat1$LIT_grp=='no',]$BL_ses)
+100 * round(table(dat1[dat1$LIT_grp=='no',]$BL_ses)/dim(dat1[dat1$LIT_grp=='no',])[1],3)
+#  "26.3% (325)" "21.1% (261)" "17.7% (219)" "18.4% (227)" "16.4% (203)"
+paste(100 * round(table(dat1[dat1$LIT_grp=='no',]$BL_ses)/dim(dat1[dat1$LIT_grp=='no',])[1],3),
+      "% (",
+      table(dat1[dat1$LIT_grp=='no',]$BL_ses), ")",sep='')
+
+col1 = c(col1,c('Poorest',
+                'Poor',
+                'Median poor',
+                'Less poor',
+                'Least poor'))
+col2 = c(col2, paste(formatC(100 * round(table(dat1[dat1$LIT_grp=='yes',]$BL_ses)/dim(dat1[dat1$LIT_grp=='yes',])[1],3),1,format="f"),
+                     "% (",
+                     table(dat1[dat1$LIT_grp=='yes',]$BL_ses), ")",sep=''))
+col3 = c(col3, paste(100 * round(table(dat1[dat1$LIT_grp=='no',]$BL_ses)/dim(dat1[dat1$LIT_grp=='no',])[1],3),
+                     "% (",
+                     table(dat1[dat1$LIT_grp=='no',]$BL_ses), ")",sep=''))
+
+# intervnetion
+# baseline literacy – spelling score (0-20) – mean (sd)
+round(mean(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1)
+round(sd(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1)
+# cell 8.4 (4.6)
+paste(round(mean(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1),
+      ' (',
+      round(sd(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1),
+      ')',sep='')
+
+# control
+# baseline literacy – spelling score (0-20) – mean (sd)
+round(mean(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1)
+round(sd(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1)
+# 7.8 (4.3)
+paste(round(mean(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1),
+      ' (',
+      round(sd(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1),
+      ')',sep='')
+
+col1 = c(col1,'Baseline literacy – spelling score (0-20) – mean (sd)')
+col2 = c(col2, paste(round(mean(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1),
+                     ' (',
+                     round(sd(dat1[dat1$LIT_grp=='yes',]$BL_gll21_total),1),
+                     ')',sep=''))
+col3 = c(col3, paste(round(mean(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1),
+                     ' (',
+                     round(sd(dat1[dat1$LIT_grp=='no',]$BL_gll21_total),1),
+                     ')',sep=''))
+
+### Outcome at 9-month follow-up 
+
+col1 = c(col1, 'Outcome at 9-month follow-up ')
+col2 = c(col2,' ')
+col3 = c(col3,' ')
+
+# intervention, outcome at 9-month follow-up 
+sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE)
+100 * round(sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE)/
+              dim(dat1[dat1$LIT_grp=='yes', ])[1],3)
+# cell "52.4% (644)"
+paste(100 * round(sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE)/
+                    dim(dat1[dat1$LIT_grp=='yes', ])[1],3),
+      "% (",
+      sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE),")",sep='')
+
+# control
+sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE)
+100 * round(sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE)/
+              dim(dat1[dat1$LIT_grp=='no', ])[1],3)
+# cell "39.5% (488)"
+paste(100 * round(sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE)/
+                    dim(dat1[dat1$LIT_grp=='no', ])[1],3),
+      "% (",
+      sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE),")",sep='')
+
+col1 = c(col1,'High literacy (spelling score > 10)')
+col2 = c(col2, paste(100 * round(sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE)/
+                                   dim(dat1[dat1$LIT_grp=='yes', ])[1],3),
+                     "% (",
+                     sum(dat1[dat1$LIT_grp=='yes',]$gll21_total > 10,na.rm = TRUE),")",sep=''))
+col3 = c(col3, paste(100 * round(sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE)/
+                                   dim(dat1[dat1$LIT_grp=='no', ])[1],3),
+                     "% (",
+                     sum(dat1[dat1$LIT_grp=='no',]$gll21_total > 10,na.rm = TRUE),")",sep=''))
+
+# intervention
+# missing outcome
+sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total))
+100 * round(sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total))/ 
+              dim(dat1[dat1$LIT_grp=='yes',])[1],3)
+# cell 12.4% (152)
+paste(100 * round(sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total))/ 
+                    dim(dat1[dat1$LIT_grp=='yes',])[1],3),
+      '% (',
+      sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total)), ")",sep='')
+
+# control
+# missing outcome
+sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total))
+100 * round(sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total))/ 
+              dim(dat1[dat1$LIT_grp=='no',])[1],3)
+# cell 11.6% (143)
+paste(100 * round(sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total))/ 
+                    dim(dat1[dat1$LIT_grp=='no',])[1],3),
+      '% (',
+      sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total)), ")",sep='')
+col1 = c(col1,'Missing outcome')
+col2 = c(col2, paste(100 * round(sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total))/ 
+                    dim(dat1[dat1$LIT_grp=='yes',])[1],3),
+      '% (',
+      sum(is.na(dat1[dat1$LIT_grp=='yes',]$gll21_total)), ")",sep=''))
+col3 = c(col3, paste(100 * round(sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total))/ 
+                    dim(dat1[dat1$LIT_grp=='no',])[1],3),
+      '% (',
+      sum(is.na(dat1[dat1$LIT_grp=='no',]$gll21_total)), ")",sep=''))
+### Combine the results to draw table:
+table_1a = data.frame(col1, col2, col3)
+colnames(table_1a) = c('',
+                       'Intervention\n(n=1230)',
+                       'Control\n(n=1235)')
+
+
+table_1a
+#write.csv(table_1a,'table_1a.csv')
+```
+
+
+```{R echo=FALSE}
+a1 = table_1a[c(2,3,5:17,20:21),]
+rownames(a1) = NULL
+kable(a1, "latex", longtable = T, booktabs = T,
+caption = 'Table 1: Analysis of HALI motivating data set') %>% add_indent(c(6:9,11:15,16,17))%>%
+  footnote(general=c("1A: Baseline and outcome characteristics of motivating HALI data set for n=2465 participants with complete baseline covariates"),
+         threeparttable = T,
+         footnote_as_chunk=TRUE, 
+         escape=FALSE) %>%
+group_rows("Baseline cluster characteristics", 1, 2) %>%
+group_rows("Baseline child-level characteristics - % (n)", 3, 15) %>%
+group_rows("Outcome at 9-month follow-up", 16, 17) 
+
+```
+
+```{R include = FALSE}
+
+### The pool function for MMI
+mypool <- function(mean0,sd0,num=5,J=50){
+  # input: 
+  # mean0: a vector of the values of estimated beta parameter, with length equals to the imputation time.
+  # sd0: a vector of the standard deviations of the estimated beta parameter, with length equals to the imputation time.
+  # num: impuation time
+  # J: the number of clusters in each intervention arm 
+  
+  # count the times of NA in the input vector.
+  na_times <- sum(is.na(mean0)) 
+  # the number of imputations without NA. 
+  num_actual <- num-na_times 
+  
+  # the MI estimate of the beta parameter
+  m <- mean(mean0,na.rm=TRUE) 
+  
+  # estimate of average wihtin-imputation variance 
+  # i.e. based on the SE^2 of the beta parameter from each fitted model
+  W <- mean(sd0^2,na.rm=TRUE) 
+  
+  # estimate of between-imputation variance 
+  # i.e. empirical SD of the point estimates of beta parameter
+  B <- var(mean0,na.rm=TRUE) 
+  
+  # estimate of total variance 
+  # i.e. will need to take the sqrt of this to use for inference in making confidence intervals etc.
+  v_hat <- W+(1+1/num_actual)*B 
+  v_hat_sqrt<-sqrt(v_hat)
+  
+  # Confindence interval
+  # Testing based on naive normal distribution assumption
+  l <- m-1.96*v_hat_sqrt
+  u <- m+1.96*v_hat_sqrt
+  
+  # Testing based on standard results from MI literature
+  # i.e. df of t distribution for testing based on standard results from MI literature
+  df_denom <- (1+1/num_actual)*B
+  df_part <- 1+W/df_denom
+  df_t <- (num_actual-1)*df_part^2 # adjusted df of t distribution
+  l_t <- m-qt(0.975,df_t)*v_hat_sqrt
+  u_t <- m+qt(0.975,df_t)*v_hat_sqrt
+  
+  # Testing based on results from MMI literature, Barnard and Rubin (1999), 
+  # df of t distribution for testing based on results in re adjustment for MMI feature
+  
+  #df for full data
+  df_com <- 2*J - 2 
+  
+  # calculate the adjusted df based on the literature.
+  parenthesis <- 1+df_denom*(1/W) 
+  df_obs <- df_com*((df_com+1)/(df_com+3))*(1/parenthesis) 
+  df_adj_t <- 1/(1/df_t + 1/df_obs) 
+  
+  # Print the results
+  print("Standard t df and Barnard/Rubin adjusted t df");
+  print(c(df_t, df_adj_t))
+  print("97.5% quantiles from standard t df and Barnard/Rubin adjusted t df");
+  print(c(qt(0.975,df_t), qt(0.975,df_adj_t)))
+  
+  # The confidence interval calculated based on df of standard t distribution and adjusted df of t distribution 
+  l_t <- m-qt(0.975,df_t)*v_hat_sqrt
+  u_t <- m+qt(0.975,df_t)*v_hat_sqrt
+  l_adj_t <- m-qt(0.975,df_adj_t)*v_hat_sqrt
+  u_adj_t <- m+qt(0.975,df_adj_t)*v_hat_sqrt
+  
+  return(list(mean=m,std=v_hat_sqrt,
+              df_t=df_t,
+              df_adj_t=df_adj_t))
+}
+
+```
+
+```{R include =FALSE}
+
+# Add misisng indicator
+dat1$missing = is.na(dat1$gll21_total)
+# Add high literacy indicator
+y = ifelse(dat1$gll21_total>10,1,0)
+dat1$y = y
+
+#### draw table 1 b
+
+# formulas
+# formula for GEE
+formula1 = y ~ LIT_grp
+formula2 = y ~ LIT_grp + BL_gll21_total + 
+  age_child + sex + schlevel_comp + BL_ses
+
+# formula to calculate the weights 
+formula3 = missing ~ LIT_grp + BL_gll21_total + 
+  age_child + sex + schlevel_comp + 
+  BL_ses
+formula4 = missing ~ LIT_grp + BL_gll21_total + 
+  age_child + sex + schlevel_comp + 
+  BL_ses + (1 | school_id)
+
+
+# Empty vectors that save results later.
+means <- c();sds <- c();cis <- c();ps <- c()
+
+################ CRA-GEE ################ 
+# independent working correlation matrix
+ucra_ind <- geem(formula1,id = school_id, 
+                 data = dat1,
+                 family =  binomial("logit"),
+                 corstr = "independence")
+summary(ucra_ind)
+
+# save the results 
+m <- summary(ucra_ind)$beta[2]
+s <- summary(ucra_ind)$se.robust[2]
+p <- summary(ucra_ind)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+# exchangeable working correlation matrix
+ucra_ex <- geem(formula = formula1,id = school_id, 
+                data = dat1,
+                family =  binomial("logit"),
+                corstr = "exchangeable")
+ucra_ex
+summary(ucra_ex)
+# save the results 
+m <- summary(ucra_ex)$beta[2]
+s <- summary(ucra_ex)$se.robust[2]
+p <- summary(ucra_ex)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+################ A-CRA-GEE ################ 
+# independent working correlation matrix
+cra_ind <- geem(formula = formula2,
+                id = school_id, data = dat1,
+                family =  binomial("logit"),
+                corstr = "independence")
+summary(cra_ind)
+# save the results 
+m <- summary(cra_ind)$beta[2]
+s <- summary(cra_ind)$se.robust[2]
+p <- summary(cra_ind)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+# exchangeable working correlation matrix
+cra_ex <- geem(formula = formula2,
+               id = school_id, data = dat1,
+               family =  binomial("logit"),
+               corstr = "exchangeable")
+cra_ex
+summary(cra_ex)
+# save the results 
+m <- summary(cra_ex)$beta[2]
+s <- summary(cra_ex)$se.robust[2]
+p <- summary(cra_ex)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+################ W-GEE ################ 
+
+# 1. calculate the weights
+w1 <- glm(formula = formula3, data = dat1,
+          family = binomial(link='logit'))
+w2 <- glmer(formula = formula4, data = dat1,
+            family = binomial(link='logit'),
+            control=glmerControl(optimizer="bobyqa",
+                                 optCtrl=list(maxfun=2e5)))
+# increase the iteration times to avoid non-convergence
+
+w1 <- predict(w1,type="response")  # get the weights value from the glm
+w2 <- predict(w2,type="response")  # get the weights value form the glmer
+
+# add the weights to the dataset
+dat1$weight <- 1/w1
+dat1$weight2 <- 1/w2
+
+# with independent working correlation matrix
+ipw_ind <- geem(formula = y~LIT_grp,
+                id = school_id, data = dat1,
+                family =  binomial("logit"),
+                weights = dat1$weight,
+                corstr = "independence")
+summary(ipw_ind)
+
+# save the results 
+m <- summary(ipw_ind)$beta[2]
+s <- summary(ipw_ind)$se.robust[2]
+p <- summary(ipw_ind)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+# with exchangeable working correlation matrix
+ipw_ex <- geem(formula = y~LIT_grp,
+               id = school_id, data = dat1,
+               family =  binomial("logit"),
+               weights = dat1$weight,
+               corstr = "exchangeable")
+summary(ipw_ex)
+
+# save the results 
+m <- summary(ipw_ex)$beta[2]
+s <- summary(ipw_ex)$se.robust[2]
+p <- summary(ipw_ex)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+
+################ CW-GEE ################
+# independent working correlation matrix
+ipw_clu_ind <- geem(formula = y~LIT_grp,
+                    id=school_id, data = dat1,
+                    family =  binomial("logit"),
+                    weights = dat1$weight2,
+                    corstr = "independence")
+summary(ipw_clu_ind)
+
+# save the results 
+m <- summary(ipw_clu_ind)$beta[2]
+s <- summary(ipw_clu_ind)$se.robust[2]
+p <- summary(ipw_clu_ind)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+# save the results 
+means <- c(means,exp(m))
+ps <- c(ps,p)
+sds <- c(sds,s)
+ciu = exp(ciu); cil = exp(cil)
+cis <- c(cis,paste('(',round(ciu,2),', ',round(cil,2),')',sep=''))
+
+# exchangeable working correlation matrix
+ipw_clu_ex <- geem(formula = y~LIT_grp,
+                   id = school_id, data = dat1,
+                   family =  binomial("logit"),
+                   weights = dat1$weight2,
+                   corstr = "exchangeable")
+summary(ipw_clu_ex)
+
+# save the results 
+m <- summary(ipw_clu_ex)$beta[2]
+s <- summary(ipw_clu_ex)$se.robust[2]
+p <- summary(ipw_clu_ex)$p[2]
+ciu <- m-1.96*s; cil <- m+1.96*s
+
+# save results 
+means <- c(means,exp(m))
+sds <- c(sds,s)
+ps <- c(ps,p)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+################ MMI-GEE ################ 
+covariates <- c("BL_gll21_total","age_child","sex","schlevel_comp","BL_ses")
+data.miss <- dat1
+# data frame for response variables with missing values
+y.cat <- data.frame(outcome=factor(data.miss$y))  
+# number of levels in outcome variable
+y.numcat <- c(2)     
+# data frame for clusters
+clus <- data.frame(clus=data.miss$school_id)         
+# covariates, includes 1s.
+nobs <- dim(data.miss)[1]
+x <- data.frame(rep(1,nobs),
+                data.miss[,covariates],
+                group=data.miss$LIT_grp)
+
+# run to generate Nimp full datasets
+# imp is full datasets 
+# Nimp <- 15
+# generate the complete dataset
+
+set.seed(123)
+Nimp <- 15
+imp <- jomo1rancat(Y.cat = y.cat, Y.numcat = y.numcat, X = x,
+                   clus = clus, nburn = 100, nbetween = 25, 
+                   nimp = Nimp,output = 0)
+
+mmi_est_ind <- c();mmi_est_ex <- c()
+mmi_std_ind <- c();mmi_std_ex <- c()
+mmi_p_ind <- c();mmi_p_ex <- c()
+
+for(i in 1:Nimp){
+  temp <- imp[imp$Imputation==i,]
+  rownames(temp) <- NULL
+  temp$outcome <- as.numeric(temp$outcome)-1
+  
+  # run the analysis for Nimp times
+  mmi_ind <- geem(formula=outcome~group,
+                  id=clus , data = temp,
+                  family =  binomial("logit"),
+                  corstr = "independence")
+  mmi_ex <- geem(formula=outcome~group,
+                 id=clus , data = temp,
+                 family =  binomial("logit"),
+                 corstr = "exchangeable")
+  
+  # save the results 
+  mmi_est_ind <- c(mmi_est_ind,
+                   summary(mmi_ind)$beta[2])
+  mmi_std_ind <- c(mmi_std_ind,
+                   summary(mmi_ind)$se.robust[2])
+  
+  # save the results 
+  mmi_est_ex <- c(mmi_est_ex,
+                  summary(mmi_ex)$beta[2])
+  mmi_std_ex <- c(mmi_std_ex,
+                  summary(mmi_ex)$se.robust[2])
+  mmi_p_ind <- c(mmi_p_ind,summary(mmi_ind)$p[2])
+  mmi_p_ex <- c(mmi_p_ex,summary(mmi_ex)$p[2])
+}
+
+# pool results
+
+pool1 <- mypool(mmi_est_ind,mmi_std_ind,num=Nimp)
+pool2 <- mypool(mmi_est_ex,mmi_std_ex,num=Nimp)
+
+# save the results 
+# independent working correlation matrix
+ciu <- pool1$mean - qt(0.975, pool1$df_adj_t)*pool1$std;
+cil <- pool1$mean + qt(0.975, pool1$df_adj_t)*pool1$std
+means <- c(means,exp(pool1$mean))
+ps <- c(ps,round(mean(mmi_p_ind),3))
+sds <- c(sds,pool1$std)
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+# exchangeable working correlation matrix
+ciu <- pool2$mean - qt(0.975, pool2$df_adj_t)*pool2$std;
+cil <- pool2$mean + qt(0.975, pool2$df_adj_t)*pool2$std
+# save the results
+means <- c(means,exp(pool2$mean))
+sds <- c(sds,pool2$std) 
+ps <- c(ps,round(mean(mmi_p_ex),3))
+ciu <- formatC(exp(ciu),2,format="f"); cil <- formatC(exp(cil),2,format="f")
+cis <- c(cis,paste('(',ciu,', ',cil,')',sep=''))
+
+
+
+################ Draw table ################
+# use the saved resutls to draw summary table
+# use the saved resutls to draw summary table
+
+coefs_ind <- formatC(means[seq(1,10,2)],2,format="f")
+coefs_ex <- formatC(means[seq(2,10,2)],2,format="f")
+std_ind <- formatC(sds[seq(1,10,2)],2,format="f")
+std_ex <- formatC(sds[seq(2,10,2)],2,format="f")
+cis_ind <- formatC(cis[seq(1,10,2)],2,format="f")
+cis_ex <- formatC(cis[seq(2,10,2)],2,format="f")
+p_ind <- formatC(ps[seq(1,10,2)],3,format="f")
+p_ex <- formatC(ps[seq(2,10,2)],3,format="f")
+names <- c('CRA-GEE','A-CRA-GEE','W-GEE','CW-GEE','MMI-GEE')
+
+table_sum <- cbind(names,coefs_ex,std_ex,cis_ex,p_ex,coefs_ind,std_ind,cis_ind,p_ind)
+colnames(table_sum) <- c('Method','Estimated','SE','Confidence Interval','p-value',
+                         'Estimated','SE','Confidence Interval','p-value')
+table_sum[table_sum[,c(5)] == "0.000",5] <- '<0.001'
+table_sum[table_sum[,c(9)] == "0.000",9] <- '<0.001'
+
+```
+
+```{R echo=FALSE}
+hali_ex <- table_sum[,c(1,2,4)]
+colnames(hali_ex) = c(' ',  "OR","(95% CI)")
+kable(hali_ex, "latex", longtable = T, booktabs = T,
+      caption = 'Table 1: Analysis of HALI motivating data set') %>%
+kable_styling(latex_options = c("repeat_header")) %>% footnote(general=c("1B: Estimated intervention effects under five different GEE approaches (with robust SE and exchangeable working correlation matrix)"),
+         threeparttable = T,
+         footnote_as_chunk=TRUE, 
+         escape=FALSE)
+```

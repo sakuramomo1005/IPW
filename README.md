@@ -27,7 +27,8 @@ $$\pi_{ijl}=expit(1+ 1.36 * i +  x_{ijl}+\delta_{ij}) $$
 * ICC=0.1, $\delta_{ij} \sim N(0, 0.366)$ (the variance is 0.366)
 
 * ICC=0.2, $\delta_{ij} \sim N(0, 0.823)$ (the variance is 0.823)
-
+  
+  
 4. Number of clusters: **10, 25, 50 ** clusters in each intervention arm
 
 5. Cluster size: the cluster size is from a Poisson distribution, which is not fixed. cluster size $\sim POI(50)$ 

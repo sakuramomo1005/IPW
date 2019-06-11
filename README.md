@@ -3,6 +3,7 @@ $x$
 $ x^2 $
 
 
+
 \begin{equation}
 x^2
 \end{equation}
